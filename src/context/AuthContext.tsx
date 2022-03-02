@@ -1,32 +1,34 @@
 import { ReactNode, createContext, useState, useEffect, useCallback } from "react";
 import { auth } from "../services/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 
-type User = {
+interface IUser {
     id: string;
     name: string;
     avatar: string;
     email: string | null;
 }
-  
-type AuthContextType = {
-    user: User | undefined;
+
+interface AuthContextType {
+    user: IUser | undefined;
     signInWithGoogle: () => Promise<void>;
+    signInWithFacebook: () => Promise<void>;
+    sigInWithEmailAndSenha: (email: string, password: string) => Promise<void>;
 }
 
-type AuthContextProviderProps = {
+interface AuthContextProviderProps {
     children: ReactNode;
 }
 
 export const AuthContext = createContext({} as AuthContextType);
 
-export function AuthContextProvider({children}:AuthContextProviderProps){
-    const [user, setUser] = useState<User>();
+export function AuthContextProvider({children}:AuthContextProviderProps): JSX.Element {
+    const [user, setUser] = useState<IUser>()
 
     useEffect(() => {
       const unsubscribe = auth.onAuthStateChanged(user => {
         if(user) {
-          const { displayName, photoURL, uid } = user;
+          const { uid, displayName, photoURL, email } = user;
   
           if(!displayName || !photoURL) {
             throw new Error('Missing information from google account');
@@ -36,22 +38,23 @@ export function AuthContextProvider({children}:AuthContextProviderProps){
             id: uid,
             name: displayName,
             avatar: photoURL,
-            email: user.email
-          })
-        }
-      })
+            email: email,
+          });
+      }})
   
       return () => {
         unsubscribe();
       }
     }, [])
+
+    
   
     const signInWithGoogle = useCallback(async () => {
       const provider = new GoogleAuthProvider()
       
       const result = await signInWithPopup(auth, provider);
         if(result.user) {
-          const { displayName, photoURL, uid } = result.user;
+          const { displayName, photoURL, uid, email } = result.user;
   
           if(!displayName || !photoURL) {
             throw new Error('Missing information from google account');
@@ -61,14 +64,55 @@ export function AuthContextProvider({children}:AuthContextProviderProps){
             id: uid,
             name: displayName,
             avatar: photoURL,
-            email: result.user.email
+            email: email
           })
         }
       
-    }, [])
+    }, []);
+
+    const signInWithFacebook = useCallback(async() => {
+      const provider = new FacebookAuthProvider()
+
+      const result = await signInWithPopup(auth, provider);
+        if(result.user) {
+          const { displayName, photoURL, uid, email } = result.user;
+  
+          if(!displayName || !photoURL) {
+            throw new Error('Missing information from google account');
+          }
+  
+          setUser({
+            id: uid,
+            name: displayName,
+            avatar: photoURL,
+            email: email
+          })
+        }
+    } , []);
+
+    const sigInWithEmailAndSenha = useCallback(async (email: string, password: string) => {
+      const provider = signInWithEmailAndPassword(auth, email, password);
+
+      const result = await provider;
+        if(result.user) {
+          const { displayName, photoURL, uid, email } = result.user;
+  
+          if(!displayName || !photoURL) {
+            throw new Error('Missing information from google account');
+          }
+  
+          setUser({
+            id: uid,
+            name: displayName,
+            avatar: photoURL,
+            email: email
+          })
+        }
+    }, []);
+      
     
     return (
-        <AuthContext.Provider value={{ user, signInWithGoogle }} >
+        <AuthContext.Provider value={{ user, signInWithGoogle, signInWithFacebook, sigInWithEmailAndSenha }} >
             {children}
         </AuthContext.Provider>
     );

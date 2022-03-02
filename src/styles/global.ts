@@ -13,6 +13,8 @@ export const GlobalStyle = createGlobalStyle`
         --button-google: #fff;
         --button-facebook: #0c67d3;
 
+        --color-error: #f00;
+
     }
 
     * {

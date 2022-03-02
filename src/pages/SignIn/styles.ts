@@ -28,9 +28,7 @@ export const Content = styled.div`
         align-items: center;
         
         img {
-            margin-top: -3rem;
             width: 10rem;
-            height: 10rem;
         }
 
         button {

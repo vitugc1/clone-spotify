@@ -1,8 +1,16 @@
 import React from 'react'
+import { NavBar } from '../../components/NavBar'
+
+import { Container } from './styles'
 
 export const Home: React.FC = () => {
   return (
-    <div>index</div>
+    <Container>
+      <div className="content-navBar">
+        <NavBar />
+      </div>
+      <div></div>
+    </Container>
   )
 }
 
